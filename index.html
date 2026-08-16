@@ -44,6 +44,14 @@
     th { color:var(--muted); font-size:12px; }
     .note { background:#eff6ff; padding:11px; border-radius:12px; font-size:13px; color:#1e3a8a; }
     .footer-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+    .exercise-guide { margin-top:14px; background:#f8fafc; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    .exercise-guide img { display:block; width:100%; height:auto; background:white; }
+    .exercise-guide-content { padding:12px 14px 14px; }
+    .exercise-guide-title { font-weight:800; font-size:16px; margin-bottom:4px; }
+    .exercise-guide-muscles { font-size:13px; color:#15803d; font-weight:700; margin-bottom:8px; }
+    .exercise-guide-tip { font-size:13px; color:#374151; line-height:1.45; }
+
   </style>
 </head>
 <body>
@@ -64,6 +72,15 @@
       <h2>Ny registrering</h2>
       <label>Øvelse</label>
       <select id="exercise"></select>
+
+      <div class="exercise-guide" id="exerciseGuide">
+        <img id="exerciseImage" src="benpres.png" alt="Illustration af benpres">
+        <div class="exercise-guide-content">
+          <div class="exercise-guide-title" id="guideTitle">Benpres</div>
+          <div class="exercise-guide-muscles" id="guideMuscles">Lår og baller</div>
+          <div class="exercise-guide-tip" id="guideTip">Sid med ryggen mod ryglænet og fødderne stabilt på pladen. Pres kontrolleret op og sænk langsomt tilbage.</div>
+        </div>
+      </div>
 
       <div class="grid3" style="margin-top:10px">
         <div>
@@ -137,6 +154,44 @@ const exercises = [
   "Cable crunch"
 ];
 
+const exerciseGuides = {
+  "Benpres": {
+    image:"benpres.png",
+    muscles:"Lår og baller",
+    tip:"Sid med ryggen mod ryglænet og fødderne stabilt på pladen. Pres kontrolleret op og sænk langsomt tilbage."
+  },
+  "Chest press / brystpres": {
+    image:"chest-press.png",
+    muscles:"Bryst, triceps og forreste skulder",
+    tip:"Hold ryggen mod ryglænet. Pres armene frem uden at låse albuerne hårdt, og før vægten roligt tilbage."
+  },
+  "Lat pulldown": {
+    image:"lat-pulldown.png",
+    muscles:"Ryg og biceps",
+    tip:"Tag et greb lidt bredere end skulderbredde. Træk stangen ned mod øvre bryst og før den langsomt tilbage."
+  },
+  "Leg curl": {
+    image:"leg-curl.png",
+    muscles:"Baglår",
+    tip:"Hold hoften stabil mod bænken. Bøj knæene og træk hælene op, og sænk kontrolleret tilbage."
+  },
+  "Seated row / siddende roning": {
+    image:"seated-row.png",
+    muscles:"Midtryg, biceps og bageste skulder",
+    tip:"Sid med ret ryg. Træk håndtaget ind mod maven og saml skulderbladene uden at læne dig langt tilbage."
+  },
+  "Shoulder press": {
+    image:"shoulder-press.png",
+    muscles:"Skuldre og triceps",
+    tip:"Hold ryggen støttet. Pres håndtagene op over hovedet og sænk dem langsomt tilbage til startpositionen."
+  },
+  "Cable crunch": {
+    image:"cable-crunch.png",
+    muscles:"Mave",
+    tip:"Knæl foran kabelmaskinen. Krumm overkroppen ved hjælp af mavemusklerne – undgå at trække bevægelsen med armene."
+  }
+};
+
 const storageKey = "styrketracker_entries_v1";
 let entries = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
@@ -162,6 +217,17 @@ function fillSelects() {
   });
 }
 fillSelects();
+
+function updateExerciseGuide() {
+  const g = exerciseGuides[exercise.value];
+  if (!g) return;
+  const img = document.getElementById("exerciseImage");
+  img.src = g.image;
+  img.alt = "Illustration af " + exercise.value;
+  document.getElementById("guideTitle").textContent = exercise.value;
+  document.getElementById("guideMuscles").textContent = g.muscles;
+  document.getElementById("guideTip").textContent = g.tip;
+}
 
 function save() {
   const w = Number(weight.value);
@@ -296,6 +362,7 @@ function renderAll(){
 }
 
 document.getElementById("saveBtn").addEventListener("click",save);
+exercise.addEventListener("change", updateExerciseGuide);
 chartExercise.addEventListener("change",drawChart);
 window.addEventListener("resize",drawChart);
 
@@ -330,6 +397,7 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 
+updateExerciseGuide();
 renderAll();
 </script>
 </body>

@@ -51,6 +51,11 @@
     .exercise-guide-title { font-weight:800; font-size:16px; margin-bottom:4px; }
     .exercise-guide-muscles { font-size:13px; color:#15803d; font-weight:700; margin-bottom:8px; }
     .exercise-guide-tip { font-size:13px; color:#374151; line-height:1.45; }
+    .exercise-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .stat-box { background:white; border:1px solid var(--border); border-radius:12px; padding:10px; }
+    .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    .stat-value { font-size:15px; font-weight:800; margin-top:3px; }
+    .stat-sub { font-size:11px; color:var(--muted); margin-top:2px; }
 
   </style>
 </head>
@@ -79,6 +84,18 @@
           <div class="exercise-guide-title" id="guideTitle">Benpres</div>
           <div class="exercise-guide-muscles" id="guideMuscles">Lår og baller</div>
           <div class="exercise-guide-tip" id="guideTip">Sid med ryggen mod ryglænet og fødderne stabilt på pladen. Pres kontrolleret op og sænk langsomt tilbage.</div>
+          <div class="exercise-stats">
+            <div class="stat-box">
+              <div class="stat-label">Sidste træning</div>
+              <div class="stat-value" id="lastValue">Ingen endnu</div>
+              <div class="stat-sub" id="lastDate"></div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Bedste vægt</div>
+              <div class="stat-value" id="bestValue">Ingen endnu</div>
+              <div class="stat-sub" id="bestDate"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -218,6 +235,28 @@ function fillSelects() {
 }
 fillSelects();
 
+function updateExerciseStats() {
+  const data = entries.filter(e => e.exercise === exercise.value);
+  const last = [...data].sort((a,b) => b.date.localeCompare(a.date) || b.id-a.id)[0];
+  const best = [...data].sort((a,b) => b.weight-a.weight || b.date.localeCompare(a.date) || b.id-a.id)[0];
+
+  if (last) {
+    document.getElementById("lastValue").textContent = `${last.weight} kg · ${last.sets} × ${last.reps}`;
+    document.getElementById("lastDate").textContent = formatDate(last.date);
+  } else {
+    document.getElementById("lastValue").textContent = "Ingen endnu";
+    document.getElementById("lastDate").textContent = "";
+  }
+
+  if (best) {
+    document.getElementById("bestValue").textContent = `${best.weight} kg · ${best.sets} × ${best.reps}`;
+    document.getElementById("bestDate").textContent = formatDate(best.date);
+  } else {
+    document.getElementById("bestValue").textContent = "Ingen endnu";
+    document.getElementById("bestDate").textContent = "";
+  }
+}
+
 function updateExerciseGuide() {
   const g = exerciseGuides[exercise.value];
   if (!g) return;
@@ -227,6 +266,7 @@ function updateExerciseGuide() {
   document.getElementById("guideTitle").textContent = exercise.value;
   document.getElementById("guideMuscles").textContent = g.muscles;
   document.getElementById("guideTip").textContent = g.tip;
+  updateExerciseStats();
 }
 
 function save() {
@@ -359,6 +399,7 @@ function renderAll(){
   renderExerciseList();
   renderHistory();
   drawChart();
+  updateExerciseStats();
 }
 
 document.getElementById("saveBtn").addEventListener("click",save);

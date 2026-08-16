@@ -1,0 +1,9 @@
+{
+  "name": "StyrkeTracker",
+  "short_name": "Styrke",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#111827",
+  "description": "Registrér styrketræning og følg fremskridt."
+}

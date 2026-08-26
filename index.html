@@ -10,7 +10,10 @@
   <link rel="manifest" href="manifest.json">
   <title>StyrkeTracker</title>
   <style>
-    :root { --bg:#f4f6f8; --card:#fff; --text:#111827; --muted:#6b7280; --accent:#111827; --ok:#15803d; --border:#e5e7eb; }
+    :root {
+      --bg:#f4f6f8; --card:#fff; --text:#111827; --muted:#6b7280;
+      --accent:#111827; --ok:#15803d; --okbg:#ecfdf3; --border:#e5e7eb;
+    }
     * { box-sizing:border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     header { background:#111827; color:white; padding:calc(18px + env(safe-area-inset-top)) 18px 18px; }
@@ -21,8 +24,6 @@
     h2 { font-size:18px; margin:0 0 12px; }
     label { display:block; font-size:13px; color:var(--muted); margin-bottom:5px; }
     select,input,button { width:100%; font-size:16px; border-radius:12px; border:1px solid var(--border); padding:12px; background:white; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
     button { border:none; font-weight:700; cursor:pointer; }
     .primary { background:#111827; color:white; margin-top:12px; }
     .secondary { background:#eef2f7; color:#111827; }
@@ -33,11 +34,9 @@
     .tab.active { background:#111827; color:white; }
     .view { display:none; }
     .view.active { display:block; }
-    .exercise-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); gap:10px; }
-    .exercise-row:last-child { border-bottom:none; }
-    .exercise-name { font-weight:700; }
     .small { font-size:13px; color:var(--muted); }
     .badge { background:#eef2f7; padding:5px 8px; border-radius:999px; font-size:12px; white-space:nowrap; }
+    .badge.done { background:var(--okbg); color:var(--ok); font-weight:800; }
     canvas { width:100%; height:260px; display:block; background:white; border-radius:12px; }
     table { width:100%; border-collapse:collapse; font-size:14px; }
     th,td { text-align:left; padding:10px 6px; border-bottom:1px solid var(--border); }
@@ -45,11 +44,27 @@
     .note { background:#eff6ff; padding:11px; border-radius:12px; font-size:13px; color:#1e3a8a; }
     .footer-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 
+    .today-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .today-count { font-size:25px; font-weight:850; line-height:1; }
+    .progress { height:9px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin:12px 0 8px; }
+    .progress-fill { height:100%; width:0; background:var(--ok); transition:width .2s ease; }
+    .today-list { margin-top:10px; }
+    .today-row {
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:11px 10px; border-top:1px solid var(--border); cursor:pointer; border-radius:10px;
+    }
+    .today-row:first-child { border-top:none; }
+    .today-row.done { background:var(--okbg); }
+    .today-name { font-weight:750; }
+    .today-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+    .check { width:27px; height:27px; min-width:27px; display:grid; place-items:center; border-radius:50%; background:#eef2f7; color:#9ca3af; font-weight:900; }
+    .today-row.done .check { background:var(--ok); color:white; }
+
     .exercise-guide { margin-top:14px; background:#f8fafc; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
-    .exercise-guide img { display:block; width:100%; height:auto; background:white; }
+    .exercise-guide img { display:block; width:100%; max-height:390px; object-fit:cover; background:white; }
     .exercise-guide-content { padding:12px 14px 14px; }
-    .exercise-guide-title { font-weight:800; font-size:16px; margin-bottom:4px; }
-    .exercise-guide-muscles { font-size:13px; color:#15803d; font-weight:700; margin-bottom:8px; }
+    .exercise-guide-title { font-weight:800; font-size:17px; margin-bottom:4px; }
+    .exercise-guide-muscles { font-size:13px; color:var(--ok); font-weight:700; margin-bottom:8px; }
     .exercise-guide-tip { font-size:13px; color:#374151; line-height:1.45; }
     .exercise-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .stat-box { background:white; border:1px solid var(--border); border-radius:12px; padding:10px; }
@@ -57,33 +72,61 @@
     .stat-value { font-size:15px; font-weight:800; margin-top:3px; }
     .stat-sub { font-size:11px; color:var(--muted); margin-top:2px; }
 
+    .next-box { margin-top:10px; padding:12px; background:#fffbeb; border:1px solid #fde68a; border-radius:14px; }
+    .next-current { font-weight:800; margin:2px 0 9px; }
+    .next-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; }
+    .next-row button { width:auto; padding-left:16px; padding-right:16px; background:#111827; color:white; }
+    .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .exercise-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); gap:10px; }
+    .exercise-row:last-child { border-bottom:none; }
+    .exercise-name { font-weight:700; }
+
+    @media (max-width:420px) {
+      .exercise-stats { grid-template-columns:1fr 1fr; }
+      .grid3 { gap:7px; }
+      .grid3 input { padding-left:8px; padding-right:8px; }
+    }
   </style>
 </head>
 <body>
 <header>
   <h1>StyrkeTracker</h1>
-  <p>Registrér vægte og følg dine fremskridt</p>
+  <p>Dit program i motionscenteret</p>
 </header>
 
 <main>
   <div class="tabs">
-    <button class="tab active" data-view="registrer">Registrér</button>
+    <button class="tab active" data-view="registrer">Træning</button>
     <button class="tab" data-view="fremskridt">Fremskridt</button>
     <button class="tab" data-view="historik">Historik</button>
   </div>
 
   <section id="registrer" class="view active">
     <div class="card">
-      <h2>Ny registrering</h2>
+      <div class="today-head">
+        <div>
+          <h2 style="margin-bottom:3px">Dagens træning</h2>
+          <div class="small" id="todayDateLabel"></div>
+        </div>
+        <div class="today-count"><span id="doneCount">0</span>/7</div>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="small" id="todayHint">En øvelse markeres automatisk, når du gemmer en vægt i dag.</div>
+      <div class="today-list" id="todayList"></div>
+    </div>
+
+    <div class="card" id="registrationCard">
+      <h2>Registrér øvelse</h2>
       <label>Øvelse</label>
       <select id="exercise"></select>
 
-      <div class="exercise-guide" id="exerciseGuide">
-        <img id="exerciseImage" src="benpres.png" alt="Illustration af benpres">
+      <div class="exercise-guide">
+        <img id="exerciseImage" src="benpres.jpg" alt="Benpres-maskinen">
         <div class="exercise-guide-content">
           <div class="exercise-guide-title" id="guideTitle">Benpres</div>
           <div class="exercise-guide-muscles" id="guideMuscles">Lår og baller</div>
-          <div class="exercise-guide-tip" id="guideTip">Sid med ryggen mod ryglænet og fødderne stabilt på pladen. Pres kontrolleret op og sænk langsomt tilbage.</div>
+          <div class="exercise-guide-tip" id="guideTip"></div>
+
           <div class="exercise-stats">
             <div class="stat-box">
               <div class="stat-label">Sidste træning</div>
@@ -96,10 +139,22 @@
               <div class="stat-sub" id="bestDate"></div>
             </div>
           </div>
+
+          <div class="next-box">
+            <div class="stat-label">Forslag til næste gang</div>
+            <div class="next-current" id="nextCurrent">Intet forslag endnu</div>
+            <div class="next-row">
+              <div>
+                <label for="nextWeight">Næste vægt (kg)</label>
+                <input id="nextWeight" type="number" inputmode="decimal" min="0" step="0.5" placeholder="fx 55">
+              </div>
+              <button id="saveNextBtn">Gem forslag</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="grid3" style="margin-top:10px">
+      <div class="grid3" style="margin-top:12px">
         <div>
           <label>Vægt (kg)</label>
           <input id="weight" type="number" inputmode="decimal" min="0" step="0.5" placeholder="fx 40">
@@ -136,9 +191,6 @@
       <canvas id="chart" width="700" height="300"></canvas>
       <div class="small" id="chartSummary" style="margin-top:8px"></div>
     </div>
-    <div class="card">
-      <div class="note">Grafen viser den registrerede træningsvægt. Hvis du vil, kan en senere version også vise estimeret 1RM, samlet træningsvolumen og personlige rekorder.</div>
-    </div>
   </section>
 
   <section id="historik" class="view">
@@ -158,6 +210,8 @@
       </div>
     </div>
   </section>
+
+  <div class="small" style="text-align:center;padding:4px 0 10px">StyrkeTracker v4</div>
 </main>
 
 <script>
@@ -168,49 +222,67 @@ const exercises = [
   "Leg curl",
   "Seated row / siddende roning",
   "Shoulder press",
-  "Cable crunch"
+  "Total Abdominal"
 ];
 
 const exerciseGuides = {
   "Benpres": {
-    image:"benpres.png",
-    muscles:"Lår og baller",
-    tip:"Sid med ryggen mod ryglænet og fødderne stabilt på pladen. Pres kontrolleret op og sænk langsomt tilbage."
+    image:"benpres.jpg",
+    muscles:"Forside lår og baller · sekundært baglår",
+    tip:"Hold ryg og bækken mod ryglænet. Pres kontrolleret gennem fødderne og sænk roligt tilbage. Brug samme sædeindstilling fra gang til gang."
   },
   "Chest press / brystpres": {
-    image:"chest-press.png",
-    muscles:"Bryst, triceps og forreste skulder",
-    tip:"Hold ryggen mod ryglænet. Pres armene frem uden at låse albuerne hårdt, og før vægten roligt tilbage."
+    image:"chest-press.jpg",
+    muscles:"Bryst · triceps · forreste skulder",
+    tip:"Indstil sædet, så håndtagene er omtrent ud for midten af brystet. Hold skuldrene nede og tilbage og før vægten roligt tilbage."
   },
   "Lat pulldown": {
-    image:"lat-pulldown.png",
-    muscles:"Ryg og biceps",
-    tip:"Tag et greb lidt bredere end skulderbredde. Træk stangen ned mod øvre bryst og før den langsomt tilbage."
+    image:"lat-pulldown.jpg",
+    muscles:"Bred ryg · biceps · øvre ryg",
+    tip:"Fastgør lårene under puderne. Træk stangen ned mod øvre bryst med brystet let løftet. Undgå at trække bag nakken eller læne dig langt bagud."
   },
   "Leg curl": {
-    image:"leg-curl.png",
+    image:"leg-curl.jpg",
     muscles:"Baglår",
-    tip:"Hold hoften stabil mod bænken. Bøj knæene og træk hælene op, og sænk kontrolleret tilbage."
+    tip:"Placér knæleddet omtrent ud for maskinens rotationsakse og puden lige over anklen. Hold hofterne stabile og sænk kontrolleret."
   },
   "Seated row / siddende roning": {
-    image:"seated-row.png",
-    muscles:"Midtryg, biceps og bageste skulder",
-    tip:"Sid med ret ryg. Træk håndtaget ind mod maven og saml skulderbladene uden at læne dig langt tilbage."
+    image:"seated-row.jpg",
+    muscles:"Midtryg · biceps · bageste skulder",
+    tip:"Sid med ret ryg og brystet fremme. Træk håndtaget mod maven/nederste brystkasse og saml skulderbladene uden store sving med overkroppen."
   },
   "Shoulder press": {
-    image:"shoulder-press.png",
-    muscles:"Skuldre og triceps",
-    tip:"Hold ryggen støttet. Pres håndtagene op over hovedet og sænk dem langsomt tilbage til startpositionen."
+    image:"shoulder-press.jpg",
+    muscles:"Skuldre · triceps",
+    tip:"Indstil sædet, så håndtagene starter omkring skulderhøjde. Hold ryggen støttet og pres kontrolleret op. Du kører 3 sæt."
   },
-  "Cable crunch": {
-    image:"cable-crunch.png",
-    muscles:"Mave",
-    tip:"Knæl foran kabelmaskinen. Krumm overkroppen ved hjælp af mavemusklerne – undgå at trække bevægelsen med armene."
+  "Total Abdominal": {
+    image:"total-abdominal.jpg",
+    muscles:"Mavemuskulatur",
+    tip:"Lad bevægelsen komme fra en kontrolleret krumning af overkroppen. Undgå at gøre det til et træk med armene, og lad ikke vægtene smække sammen."
   }
 };
 
-const storageKey = "styrketracker_entries_v1";
-let entries = JSON.parse(localStorage.getItem(storageKey) || "[]");
+const storageKey = "styrketracker_entries_v1"; // Uændret: bevarer eksisterende historik
+const nextWeightKey = "styrketracker_next_weight_v1";
+
+let entries = [];
+try { entries = JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch(e) { entries = []; }
+
+// Migration: de tidligere Cable crunch-data var faktisk Total Abdominal.
+// Bevarer dato, vægt, reps, sæt og id og ændrer kun øvelsesnavnet.
+let migrated = false;
+entries = entries.map(e => {
+  if (e && e.exercise === "Cable crunch") {
+    migrated = true;
+    return {...e, exercise:"Total Abdominal"};
+  }
+  return e;
+});
+if (migrated) localStorage.setItem(storageKey, JSON.stringify(entries));
+
+let nextWeights = {};
+try { nextWeights = JSON.parse(localStorage.getItem(nextWeightKey) || "{}"); } catch(e) { nextWeights = {}; }
 
 const exercise = document.getElementById("exercise");
 const chartExercise = document.getElementById("chartExercise");
@@ -219,6 +291,7 @@ const reps = document.getElementById("reps");
 const sets = document.getElementById("sets");
 const date = document.getElementById("date");
 const msg = document.getElementById("message");
+const nextWeight = document.getElementById("nextWeight");
 
 function todayLocal() {
   const d = new Date();
@@ -226,6 +299,12 @@ function todayLocal() {
   return new Date(d.getTime()-off*60000).toISOString().slice(0,10);
 }
 date.value = todayLocal();
+
+function formatDate(s) {
+  if (!s || !s.includes("-")) return "";
+  const [y,m,d] = s.split("-");
+  return `${d}.${m}.${y}`;
+}
 
 function fillSelects() {
   exercises.forEach(x => {
@@ -235,10 +314,27 @@ function fillSelects() {
 }
 fillSelects();
 
+function entriesFor(ex) {
+  return entries.filter(e => e.exercise === ex);
+}
+
+function latestFor(ex) {
+  return entriesFor(ex).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id)[0];
+}
+
+function isDoneOn(ex, day) {
+  return entries.some(e => e.exercise === ex && e.date === day && Number(e.weight) > 0);
+}
+
+function latestOn(ex, day) {
+  return entries.filter(e => e.exercise === ex && e.date === day && Number(e.weight) > 0)
+    .sort((a,b)=>b.id-a.id)[0];
+}
+
 function updateExerciseStats() {
-  const data = entries.filter(e => e.exercise === exercise.value);
+  const data = entriesFor(exercise.value);
   const last = [...data].sort((a,b) => b.date.localeCompare(a.date) || b.id-a.id)[0];
-  const best = [...data].sort((a,b) => b.weight-a.weight || b.date.localeCompare(a.date) || b.id-a.id)[0];
+  const best = [...data].sort((a,b) => Number(b.weight)-Number(a.weight) || b.date.localeCompare(a.date) || b.id-a.id)[0];
 
   if (last) {
     document.getElementById("lastValue").textContent = `${last.weight} kg · ${last.sets} × ${last.reps}`;
@@ -257,16 +353,43 @@ function updateExerciseStats() {
   }
 }
 
+function updateNextWeight() {
+  const v = nextWeights[exercise.value];
+  document.getElementById("nextCurrent").textContent =
+    (v !== undefined && v !== null && v !== "") ? `${v} kg` : "Intet forslag endnu";
+  nextWeight.value = (v !== undefined && v !== null && v !== "") ? v : "";
+}
+
 function updateExerciseGuide() {
   const g = exerciseGuides[exercise.value];
   if (!g) return;
   const img = document.getElementById("exerciseImage");
   img.src = g.image;
-  img.alt = "Illustration af " + exercise.value;
+  img.alt = exercise.value;
   document.getElementById("guideTitle").textContent = exercise.value;
   document.getElementById("guideMuscles").textContent = g.muscles;
   document.getElementById("guideTip").textContent = g.tip;
   updateExerciseStats();
+  updateNextWeight();
+}
+
+function saveNextSuggestion() {
+  const v = Number(nextWeight.value);
+  if (!v || v <= 0) {
+    delete nextWeights[exercise.value];
+    localStorage.setItem(nextWeightKey, JSON.stringify(nextWeights));
+    document.getElementById("nextCurrent").textContent = "Intet forslag endnu";
+    nextWeight.value = "";
+    msg.textContent = "Forslag fjernet";
+  } else {
+    nextWeights[exercise.value] = v;
+    localStorage.setItem(nextWeightKey, JSON.stringify(nextWeights));
+    document.getElementById("nextCurrent").textContent = `${v} kg`;
+    msg.textContent = `✓ Næste vægt for ${exercise.value}: ${v} kg`;
+  }
+  renderToday();
+  renderExerciseList();
+  setTimeout(()=>msg.textContent="",1800);
 }
 
 function save() {
@@ -293,24 +416,65 @@ function save() {
   setTimeout(()=>msg.textContent="",1800);
 }
 
-function latestFor(ex) {
-  return entries.filter(e=>e.exercise===ex).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id)[0];
+function renderToday() {
+  const day = date.value || todayLocal();
+  const done = exercises.filter(ex => isDoneOn(ex, day)).length;
+  document.getElementById("doneCount").textContent = done;
+  document.getElementById("progressFill").style.width = `${(done/exercises.length)*100}%`;
+  document.getElementById("todayDateLabel").textContent =
+    day === todayLocal() ? `I dag · ${formatDate(day)}` : formatDate(day);
+  document.getElementById("todayHint").textContent =
+    done === exercises.length
+      ? "✓ Alle 7 øvelser er registreret."
+      : "Tryk på en øvelse nedenfor for at gå direkte til den.";
+
+  const list = document.getElementById("todayList");
+  list.innerHTML = exercises.map(ex => {
+    const doneNow = isDoneOn(ex, day);
+    const todays = latestOn(ex, day);
+    const suggested = nextWeights[ex];
+    let meta = doneNow
+      ? `${todays.weight} kg · ${todays.sets} × ${todays.reps}`
+      : (suggested ? `Forslag: ${suggested} kg` : "Mangler");
+    return `<div class="today-row ${doneNow ? "done" : ""}" data-ex="${encodeURIComponent(ex)}">
+      <div>
+        <div class="today-name">${ex}</div>
+        <div class="today-meta">${meta}</div>
+      </div>
+      <div class="check">${doneNow ? "✓" : "–"}</div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".today-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const ex = decodeURIComponent(row.dataset.ex);
+      exercise.value = ex;
+      updateExerciseGuide();
+      document.getElementById("registrationCard").scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
+
+  // Update option labels without changing option values.
+  [...exercise.options].forEach(opt => {
+    opt.textContent = `${isDoneOn(opt.value, day) ? "✓ " : ""}${opt.value}`;
+  });
 }
 
 function renderExerciseList() {
   const el = document.getElementById("exerciseList");
-  el.innerHTML = exercises.map(ex=>{
+  const day = date.value || todayLocal();
+  el.innerHTML = exercises.map(ex => {
     const l = latestFor(ex);
+    const suggestion = nextWeights[ex];
+    const done = isDoneOn(ex, day);
     return `<div class="exercise-row">
-      <div><div class="exercise-name">${ex}</div><div class="small">${l ? "Sidst: "+formatDate(l.date) : "Ingen registrering endnu"}</div></div>
-      <div class="badge">${l ? l.weight+" kg" : "—"}</div>
+      <div>
+        <div class="exercise-name">${done ? "✓ " : ""}${ex}</div>
+        <div class="small">${l ? "Sidst: "+formatDate(l.date)+" · "+l.weight+" kg" : "Ingen registrering endnu"}${suggestion ? " · Næste: "+suggestion+" kg" : ""}</div>
+      </div>
+      <div class="badge ${done ? "done" : ""}">${done ? "Færdig" : (l ? l.weight+" kg" : "—")}</div>
     </div>`;
   }).join("");
-}
-
-function formatDate(s) {
-  const [y,m,d] = s.split("-");
-  return `${d}.${m}.${y}`;
 }
 
 function renderHistory() {
@@ -336,7 +500,7 @@ function drawChart() {
   const canvas = document.getElementById("chart");
   const ctx = canvas.getContext("2d");
   const ex = chartExercise.value;
-  const data = entries.filter(e=>e.exercise===ex).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  const data = entriesFor(ex).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
 
   const cssW = canvas.clientWidth || 700;
   const dpr = window.devicePixelRatio || 1;
@@ -357,7 +521,7 @@ function drawChart() {
   }
 
   const pad={l:42,r:14,t:18,b:42};
-  const weights=data.map(d=>d.weight);
+  const weights=data.map(d=>Number(d.weight));
   let min=Math.min(...weights), max=Math.max(...weights);
   if (min===max) { min=Math.max(0,min-5); max=max+5; }
   else { const span=max-min; min=Math.max(0,min-span*.25); max+=span*.25; }
@@ -376,11 +540,11 @@ function drawChart() {
 
   ctx.strokeStyle="#111827"; ctx.lineWidth=3; ctx.lineJoin="round"; ctx.lineCap="round";
   ctx.beginPath();
-  data.forEach((d,i)=>{ const xx=x(i), yy=y(d.weight); i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); });
+  data.forEach((d,i)=>{ const xx=x(i), yy=y(Number(d.weight)); i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); });
   ctx.stroke();
 
   data.forEach((d,i)=>{
-    const xx=x(i), yy=y(d.weight);
+    const xx=x(i), yy=y(Number(d.weight));
     ctx.fillStyle="#111827"; ctx.beginPath(); ctx.arc(xx,yy,4.5,0,Math.PI*2); ctx.fill();
   });
 
@@ -388,7 +552,7 @@ function drawChart() {
   ctx.fillStyle="#6b7280"; ctx.textAlign="center"; ctx.font="11px -apple-system, sans-serif";
   labels.forEach(i=>ctx.fillText(formatDate(data[i].date).slice(0,5),x(i),H-16));
 
-  const first=data[0].weight, last=data[data.length-1].weight;
+  const first=Number(data[0].weight), last=Number(data[data.length-1].weight);
   const delta=last-first;
   document.getElementById("chartSummary").textContent =
     data.length===1 ? `Seneste vægt: ${last} kg.` :
@@ -396,14 +560,18 @@ function drawChart() {
 }
 
 function renderAll(){
+  renderToday();
   renderExerciseList();
   renderHistory();
-  drawChart();
   updateExerciseStats();
+  updateNextWeight();
+  drawChart();
 }
 
 document.getElementById("saveBtn").addEventListener("click",save);
-exercise.addEventListener("change", updateExerciseGuide);
+document.getElementById("saveNextBtn").addEventListener("click",saveNextSuggestion);
+exercise.addEventListener("change",updateExerciseGuide);
+date.addEventListener("change",renderAll);
 chartExercise.addEventListener("change",drawChart);
 window.addEventListener("resize",drawChart);
 
@@ -418,7 +586,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
 });
 
 document.getElementById("clearBtn").addEventListener("click",()=>{
-  if(confirm("Vil du slette alle registrerede træninger?")){
+  if(confirm("Vil du slette alle registrerede træninger? Forslag til næste vægt bevares.")){
     entries=[];
     localStorage.removeItem(storageKey);
     renderAll();
@@ -426,20 +594,21 @@ document.getElementById("clearBtn").addEventListener("click",()=>{
 });
 
 document.getElementById("exportBtn").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(entries,null,2)],{type:"application/json"});
+  const backup = {version:4, exported:new Date().toISOString(), entries, nextWeights};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="styrketracker-data.json";
+  a.download="styrketracker-backup.json";
   a.click();
   URL.revokeObjectURL(a.href);
 });
 
+updateExerciseGuide();
+renderAll();
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
-
-updateExerciseGuide();
-renderAll();
 </script>
 </body>
 </html>
